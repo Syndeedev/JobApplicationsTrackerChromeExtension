@@ -6,6 +6,11 @@
 .input{
 	@apply bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
 }
+
 .label{
 	@apply block mb-2 text-sm font-medium text-blue-900
+}
+
+.alert-danger {
+	@apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
 }
