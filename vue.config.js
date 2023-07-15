@@ -1,53 +1,55 @@
-/**
- * Created by kelvinsun on 18/9/29.
- *
- * vue-cli config file.
- */
+const path = require("path");
+const fs = require("fs");
 
-"use strict";
+// Generate pages object
+const pages = {};
 
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+function getEntryFile(entryPath) {
+  let files = fs.readdirSync(entryPath);
+  return files;
+}
+
+const chromeName = getEntryFile(path.resolve(`src/entry`));
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+function getFileExtension(filename) {
+  return /[.]/.exec(filename) ? /[^.]+$/.exec(filename)[0] : undefined;
+}
+chromeName.forEach((name) => {
+  const fileExtension = getFileExtension(name);
+  const fileName = name.replace("." + fileExtension, "");
+  pages[fileName] = {
+    entry: `src/entry/${name}`,
+    template: "public/index.html",
+    filename: `${fileName}.html`,
+  };
+});
+
+const isDevMode = process.env.NODE_ENV === "development";
 
 module.exports = {
-  // 因为这个项目是打包发布的 app, 不是线上资源, 所以不需要哈希
+  pages,
   filenameHashing: false,
-  pages: {
-    popup: {
-      entry: "src/popup.js",
-      template: "public/popup.html",
-    },
-    background: {
-      entry: "src/background.js",
-      template: "public/background.html",
-    },
-  },
-  // 开发的时候为 true, 发布时为 false
-  productionSourceMap: "development" === process.env.NODE_ENV,
   configureWebpack: {
     plugins: [
       new CopyWebpackPlugin([
-        { from: "public/manifest.json", to: "manifest.json" },
-        { from: "src/image/*.png", to: "image/[name].png" },
+        {
+          from: path.resolve(`src/manifest.${process.env.NODE_ENV}.json`),
+          to: `${path.resolve("dist")}/manifest.json`,
+        },
+        {
+          from: path.resolve(`public/`),
+          to: `${path.resolve("dist")}/`,
+        },
       ]),
     ],
+    output: {
+      filename: `[name].js`,
+      chunkFilename: `[name].js`,
+    },
+    devtool: isDevMode ? "inline-source-map" : false,
   },
-  // chainWebpack 修改编译目标目录
-  // https://segmentfault.com/q/1010000016475212
-  chainWebpack: (config) => {
-    config.module
-      .rule("images")
-      .use("url-loader")
-      .tap((args) => {
-        // 日, 这里不应该放数组
-        return {
-          limit: 4096,
-          fallback: {
-            loader: "file-loader",
-            options: {
-              name: "image/[name].[ext]",
-            },
-          },
-        };
-      });
+  css: {
+    extract: false, // Make sure the css is the same
   },
 };
