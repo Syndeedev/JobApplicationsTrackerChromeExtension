@@ -4,7 +4,13 @@
 
     <div class="mb-6">
       <label for="email" class="label"> Job URL </label>
-      <input type="text" class="input" readonly disabled />
+      <input
+        type="text"
+        class="input"
+        readonly
+        disabled
+        v-model="form.job_url"
+      />
     </div>
 
     <div class="mb-6">
@@ -41,8 +47,15 @@ export default {
   name: "popupView",
   data() {
     return {
-      form: {},
+      form: {
+        job_url: "",
+      },
     };
+  },
+  mounted() {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      this.form.job_url = tabs[0].url;
+    });
   },
 };
 </script>
