@@ -6,6 +6,10 @@
       <strong class="font-bold">{{ error }}</strong>
     </div>
 
+    <div class="alert-success" role="alert" v-if="message">
+      <p class="font-bold">{{ message }}</p>
+    </div>
+
     <div class="mb-6">
       <label for="email" class="label"> Job URL </label>
       <input
@@ -39,15 +43,17 @@
 
     <button
       @click="addJob"
+      :disabled="loading"
       type="button"
       class="mt-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 w-full"
     >
-      Add Job
+      {{ loading ? "Loading..." : "Add Job" }}
     </button>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "popupView",
   data() {
@@ -58,18 +64,24 @@ export default {
         job_title: "",
         status: "draft",
       },
+      loading: false,
       error: null,
+      message: null,
     };
   },
+
   mounted() {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
       this.form.job_url = tabs[0].url;
     });
-
-    setInterval(() => (this.error = null), 1000 * 5);
   },
+
   methods: {
-    addJob() {
+    async addJob() {
+      this.loading = true;
+      this.message = null;
+      this.error = null;
+
       try {
         const emptyValues = Object.values(this.form).filter(
           (value) => !value || value === ""
@@ -78,8 +90,29 @@ export default {
         if (emptyValues.length > 0) {
           throw new Error("All fields are required");
         }
+        const payload = {
+          "JOB URL": this.form.job_url,
+          "COMPANY NAME": this.form.company_name,
+          "JOB TITLE": this.form.job_title,
+          STATUS: this.form.status,
+        };
+
+        const response = await axios.post(
+          "https://in4h2dimqg.execute-api.us-east-1.amazonaws.com",
+          payload
+        );
+
+        if (response.data.status === "Successful") {
+          this.message = "Job added to your tracker successfully";
+          this.form.company_name = "";
+          this.form.job_title = "";
+        } else {
+          throw new Error("Could not add job to your tracker please try again");
+        }
       } catch (error) {
         this.error = error.message;
+      } finally {
+        this.loading = false;
       }
     },
   },
