@@ -1,6 +1,11 @@
 <template>
   <div class="p-5 w-96">
-    <h1 class="text-lg mb-6 text-blue-900">Job Application Tracker</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-lg text-blue-900">Job Application Tracker</h1>
+      <p @click="viewJobs" class="hover:text-blue-600 text-xs cursor-pointer">
+        View Tracked Jobs
+      </p>
+    </div>
 
     <div class="alert-danger" role="alert" v-if="error">
       <strong class="font-bold">{{ error }}</strong>
@@ -114,6 +119,11 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    viewJobs() {
+      chrome.tabs.create({
+        url: "https://docs.google.com/spreadsheets/d/1e6HhRAcd2qTrMgMR33g_8dCHFP-Q29ro6yNoXHFBk48/edit#gid=0&fvid=212168865",
+      });
     },
   },
 };
